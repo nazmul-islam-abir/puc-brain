@@ -5,6 +5,8 @@ import '../services/github_service.dart';
 import '../services/supabase_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }

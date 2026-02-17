@@ -1,15 +1,23 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GitHubService {
-  final String token = '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';
-  final String owner = 'nazmul-islam-abir';
-  final String repo = 'varsityBank';
-  final String branch = 'main'; // or your default branch
+  // Get values from .env file - NO HARDCODED TOKENS!
+  final String token = dotenv.env['GITHUB_TOKEN'] ?? '';
+  final String owner = dotenv.env['GITHUB_OWNER'] ?? '';
+  final String repo = dotenv.env['GITHUB_REPO'] ?? '';
+  final String branch = dotenv.env['GITHUB_BRANCH'] ?? 'main';
 
   Future<String?> uploadFile(File file, String fileName) async {
     try {
+      // Check if credentials are available
+      if (token.isEmpty || owner.isEmpty || repo.isEmpty) {
+        print('GitHub credentials not configured in .env file');
+        return null;
+      }
+
       // Read file as base64
       List<int> fileBytes = await file.readAsBytes();
       String base64File = base64Encode(fileBytes);
