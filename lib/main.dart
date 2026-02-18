@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'screens/home_screen.dart';
+import 'package:provider/provider.dart';
+import 'services/upload_service.dart';
+import 'screens/courses_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load .env file
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+    
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL'] ?? '',
+      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    );
+  } catch (e) {
+    print('Error initializing: $e');
+  }
   
-  // Initialize Supabase with values from .env
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
-  
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -23,10 +27,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'File Uploader',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: HomeScreen(),
+    return ChangeNotifierProvider(
+      create: (context) => UploadService(),
+      child: MaterialApp(
+        title: 'StudyHub',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          fontFamily: 'Poppins',
+          brightness: Brightness.dark,
+          colorScheme: const ColorScheme.dark(
+            primary: Colors.purple,
+            secondary: Colors.blue,
+            surface: Color(0xFF1A1F2E),
+          ),
+        ),
+        home: const CoursesScreen(),
+      ),
     );
   }
 }
