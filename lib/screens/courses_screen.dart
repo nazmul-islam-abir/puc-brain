@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:myapp/screens/feeds_screen.dart';
+import 'package:myapp/screens/login_screen.dart';
+import 'package:myapp/screens/profile_screen.dart';
 import '../services/supabase_service.dart';
 import 'folder_screen.dart';
-import '../widgets/custom_drawer.dart'; // Import the custom drawer
+import '../widgets/custom_drawer.dart';
 
 class CoursesScreen extends StatefulWidget {
-  const CoursesScreen({super.key});
+  final UserRole userRole;
+  const CoursesScreen({super.key, required this.userRole});
 
   @override
   State<CoursesScreen> createState() => _CoursesScreenState();
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Add scaffold key
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final SupabaseService _supabaseService = SupabaseService();
   List<Map<String, dynamic>> _courses = [];
   bool _isLoading = true;
@@ -25,41 +29,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
-  // ─── Theme ────────────────────────────────────────────────────────────────
-  static const Color _bg          = Color(0xFF0F0F1A);
-  static const Color _surface     = Color(0xFF1C1C2E);
-  static const Color _surfaceUp   = Color(0xFF252538);
-  static const Color _accent      = Color(0xFF7C5CBF);
+  static const Color _bg = Color(0xFF0F0F1A);
+  static const Color _surface = Color(0xFF1C1C2E);
+  static const Color _surfaceUp = Color(0xFF252538);
+  static const Color _accent = Color(0xFF7C5CBF);
   static const Color _accentLight = Color(0xFFAB8EEE);
   static const Color _textPrimary = Color(0xFFF0EFFF);
-  static const Color _textSecond  = Color(0xFF8A8AAA);
+  static const Color _textSecond = Color(0xFF8A8AAA);
 
-  // ─── Categories ───────────────────────────────────────────────────────────
   final List<Map<String, dynamic>> _categories = const [
-    {'id': 'all',         'label': 'All',     'icon': Icons.grid_view_rounded,   'color': Color(0xFF7C5CBF)},
-    {'id': 'programming', 'label': 'Code',    'icon': Icons.code_rounded,        'color': Color(0xFF4F8EF7)},
-    {'id': 'math',        'label': 'Math',    'icon': Icons.calculate_rounded,   'color': Color(0xFF4ECDC4)},
-    {'id': 'science',     'label': 'Science', 'icon': Icons.science_rounded,     'color': Color(0xFF45B7D1)},
-    {'id': 'art',         'label': 'Art',     'icon': Icons.brush_rounded,       'color': Color(0xFFFF6B9D)},
-    {'id': 'music',       'label': 'Music',   'icon': Icons.music_note_rounded,  'color': Color(0xFFFFBE0B)},
-    {'id': 'language',    'label': 'Lang',    'icon': Icons.language_rounded,    'color': Color(0xFF8AC926)},
-    {'id': 'history',     'label': 'History', 'icon': Icons.history_edu_rounded, 'color': Color(0xFFFF9F1C)},
-    {'id': 'psychology',  'label': 'Psych',   'icon': Icons.psychology_rounded,  'color': Color(0xFFA3C4F3)},
+    {'id': 'all', 'label': 'All', 'icon': Icons.grid_view_rounded, 'color': Color(0xFF7C5CBF)},
+    {'id': 'programming', 'label': 'Code', 'icon': Icons.code_rounded, 'color': Color(0xFF4F8EF7)},
+    {'id': 'math', 'label': 'Math', 'icon': Icons.calculate_rounded, 'color': Color(0xFF4ECDC4)},
+    {'id': 'science', 'label': 'Science', 'icon': Icons.science_rounded, 'color': Color(0xFF45B7D1)},
+    {'id': 'art', 'label': 'Art', 'icon': Icons.brush_rounded, 'color': Color(0xFFFF6B9D)},
+    {'id': 'music', 'label': 'Music', 'icon': Icons.music_note_rounded, 'color': Color(0xFFFFBE0B)},
+    {'id': 'language', 'label': 'Lang', 'icon': Icons.language_rounded, 'color': Color(0xFF8AC926)},
+    {'id': 'history', 'label': 'History', 'icon': Icons.history_edu_rounded, 'color': Color(0xFFFF9F1C)},
+    {'id': 'psychology', 'label': 'Psych', 'icon': Icons.psychology_rounded, 'color': Color(0xFFA3C4F3)},
   ];
 
-  // ─── Course icons ─────────────────────────────────────────────────────────
   final List<Map<String, dynamic>> _courseIcons = const [
-    {'icon': Icons.code_rounded,        'color': Color(0xFF4F8EF7), 'key': 'Icons.code_rounded',        'category': 'programming'},
-    {'icon': Icons.calculate_rounded,   'color': Color(0xFF4ECDC4), 'key': 'Icons.calculate_rounded',   'category': 'math'},
-    {'icon': Icons.science_rounded,     'color': Color(0xFF45B7D1), 'key': 'Icons.science_rounded',     'category': 'science'},
-    {'icon': Icons.brush_rounded,       'color': Color(0xFFFF6B9D), 'key': 'Icons.brush_rounded',       'category': 'art'},
-    {'icon': Icons.music_note_rounded,  'color': Color(0xFFFFBE0B), 'key': 'Icons.music_note_rounded',  'category': 'music'},
-    {'icon': Icons.language_rounded,    'color': Color(0xFF8AC926), 'key': 'Icons.language_rounded',    'category': 'language'},
+    {'icon': Icons.code_rounded, 'color': Color(0xFF4F8EF7), 'key': 'Icons.code_rounded', 'category': 'programming'},
+    {'icon': Icons.calculate_rounded, 'color': Color(0xFF4ECDC4), 'key': 'Icons.calculate_rounded', 'category': 'math'},
+    {'icon': Icons.science_rounded, 'color': Color(0xFF45B7D1), 'key': 'Icons.science_rounded', 'category': 'science'},
+    {'icon': Icons.brush_rounded, 'color': Color(0xFFFF6B9D), 'key': 'Icons.brush_rounded', 'category': 'art'},
+    {'icon': Icons.music_note_rounded, 'color': Color(0xFFFFBE0B), 'key': 'Icons.music_note_rounded', 'category': 'music'},
+    {'icon': Icons.language_rounded, 'color': Color(0xFF8AC926), 'key': 'Icons.language_rounded', 'category': 'language'},
     {'icon': Icons.history_edu_rounded, 'color': Color(0xFFFF9F1C), 'key': 'Icons.history_edu_rounded', 'category': 'history'},
-    {'icon': Icons.psychology_rounded,  'color': Color(0xFFA3C4F3), 'key': 'Icons.psychology_rounded',  'category': 'psychology'},
+    {'icon': Icons.psychology_rounded, 'color': Color(0xFFA3C4F3), 'key': 'Icons.psychology_rounded', 'category': 'psychology'},
   ];
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -73,7 +73,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     super.dispose();
   }
 
-  // ─── Data ─────────────────────────────────────────────────────────────────
   Future<void> _loadCourses() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -119,7 +118,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   List<Map<String, dynamic>> get _filteredCourses => _courses.where((c) {
         final q = _searchQuery.toLowerCase();
         final nameMatch = q.isEmpty || c['name'].toString().toLowerCase().contains(q);
@@ -156,10 +154,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
   IconData _iconFor(Map<String, dynamic> course) =>
       _metaFor(course)['icon'] as IconData;
 
-  // ─── Build ────────────────────────────────────────────────────────────────
+  void _logout() async {
+    await _supabaseService.logout();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredCourses;
+    final bool isAlumni = widget.userRole == UserRole.alumni;
+
+    final List<Widget> screens = [
+      _buildCoursesPage(filtered, isAlumni),
+      FeedsScreen(userRole: widget.userRole),
+      ProfileScreen(userRole: widget.userRole),
+    ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -167,41 +181,46 @@ class _CoursesScreenState extends State<CoursesScreen> {
         systemNavigationBarColor: _bg,
       ),
       child: Scaffold(
-        key: _scaffoldKey, // Assign the key to the scaffold
-        drawer: const CustomDrawer(), // Add the drawer
+        key: _scaffoldKey,
+        drawer: CustomDrawer(
+          userRole: widget.userRole,
+          onLogout: _logout,
+        ),
         backgroundColor: _bg,
         bottomNavigationBar: _buildNavBar(),
-        floatingActionButton: _buildFAB(),
-        body: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeader()),
-              SliverToBoxAdapter(child: _buildFilters()),
-              const SliverToBoxAdapter(child: SizedBox(height: 4)),
-              SliverFillRemaining(
-                hasScrollBody: true,
-                child: _isLoading
-                    ? _buildLoading()
-                    : filtered.isEmpty
-                        ? _buildEmptyState()
-                        : _buildCourseGrid(filtered),
-              ),
-            ],
-          ),
-        ),
+        floatingActionButton: isAlumni && _navIndex == 0 ? _buildFAB() : null,
+        body: screens[_navIndex],
       ),
     );
   }
 
-  // ─── Nav bar ──────────────────────────────────────────────────────────────
+  Widget _buildCoursesPage(List<Map<String, dynamic>> filtered, bool isAlumni) {
+    return SafeArea(
+      bottom: false,
+      child: CustomScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader()),
+          SliverToBoxAdapter(child: _buildFilters()),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: _isLoading
+                ? _buildLoading()
+                : filtered.isEmpty
+                    ? _buildEmptyState(isAlumni)
+                    : _buildCourseGrid(filtered, isAlumni),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNavBar() {
     const items = [
-      {'icon': Icons.class_rounded,        'label': 'Classes'},
-      {'icon': Icons.folder_rounded,       'label': 'Materials'},
-      {'icon': Icons.cloud_upload_rounded, 'label': 'Uploading'},
-      {'icon': Icons.person_rounded,       'label': 'Profile'},
+      {'icon': Icons.class_rounded, 'label': 'Classes'},
+      {'icon': Icons.rss_feed_rounded, 'label': 'Feeds'},
+      {'icon': Icons.person_rounded, 'label': 'Profile'},
     ];
 
     return Container(
@@ -257,7 +276,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -266,13 +284,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            // Menu button
             _IconBtn(
               icon: Icons.menu,
               onTap: () => _scaffoldKey.currentState?.openDrawer(),
             ),
             const SizedBox(width: 8),
-            // Logo pill
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -287,7 +303,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ]),
             ),
             const Spacer(),
-            // Search toggle
             _IconBtn(
               icon: _isSearchExpanded ? Icons.close_rounded : Icons.search_rounded,
               onTap: () {
@@ -306,10 +321,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             const SizedBox(width: 8),
             _IconBtn(icon: Icons.refresh_rounded, onTap: _loadCourses),
           ]),
-
           const SizedBox(height: 12),
-
-          // Title OR search — plain conditional, no AnimatedCrossFade
           if (_isSearchExpanded)
             TextField(
               controller: _searchController,
@@ -352,7 +364,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Filters ──────────────────────────────────────────────────────────────
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -436,8 +447,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Course grid ──────────────────────────────────────────────────────────
-  Widget _buildCourseGrid(List<Map<String, dynamic>> courses) {
+  Widget _buildCourseGrid(List<Map<String, dynamic>> courses, bool isAlumni) {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -449,12 +459,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
       itemCount: courses.length,
       itemBuilder: (_, i) {
         final course = courses[i];
-        final color  = _colorFor(course);
-        final icon   = _iconFor(course);
+        final color = _colorFor(course);
+        final icon = _iconFor(course);
         return _CourseCard(
           course: course,
           color: color,
           icon: icon,
+          isAlumni: isAlumni,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -462,6 +473,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 courseId: course['id'],
                 courseName: course['name'],
                 courseColor: color,
+                userRole: widget.userRole,
               ),
             ),
           ),
@@ -472,7 +484,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Loading spinner ──────────────────────────────────────────────────────
   Widget _buildLoading() {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
@@ -492,8 +503,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Empty state ──────────────────────────────────────────────────────────
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isAlumni) {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
@@ -512,7 +522,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         Text(
           _searchQuery.isNotEmpty
               ? 'Try a different search term'
-              : 'Tap + to create your first course',
+              : isAlumni ? 'Tap + to create your first course' : 'Check back later for courses',
           style: const TextStyle(color: _textSecond, fontSize: 12),
           textAlign: TextAlign.center,
         ),
@@ -520,7 +530,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── FAB ─────────────────────────────────────────────────────────────────
   Widget _buildFAB() {
     return FloatingActionButton.extended(
       onPressed: _showCreateCourseDialog,
@@ -533,13 +542,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 
-  // ─── Dialogs ──────────────────────────────────────────────────────────────
   void _showCreateCourseDialog() {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     String? semesterVal = '1';
-    String selKey   = _courseIcons[0]['key'] as String;
-    Color  selColor = _courseIcons[0]['color'] as Color;
+    String selKey = _courseIcons[0]['key'] as String;
+    Color selColor = _courseIcons[0]['color'] as Color;
 
     showModalBottomSheet(
       context: context,
@@ -594,8 +602,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final nameCtrl = TextEditingController(text: course['name']);
     final descCtrl = TextEditingController(text: course['description'] ?? '');
     String? semesterVal = course['semester']?.toString();
-    String selKey   = course['icon'] ?? _courseIcons[0]['key'];
-    Color  selColor = _colorFor(course);
+    String selKey = course['icon'] ?? _courseIcons[0]['key'];
+    Color selColor = _colorFor(course);
 
     showModalBottomSheet(
       context: context,
@@ -723,14 +731,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Course Card
-// ═══════════════════════════════════════════════════════════════════════════
-
 class _CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
   final Color color;
   final IconData icon;
+  final bool isAlumni;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -739,6 +744,7 @@ class _CourseCard extends StatelessWidget {
     required this.course,
     required this.color,
     required this.icon,
+    required this.isAlumni,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -748,6 +754,7 @@ class _CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = course['name']?.toString() ?? '';
     final desc = (course['description'] ?? '').toString();
+    final semester = (course['semester'] ?? '').toString();
 
     return GestureDetector(
       onTap: onTap,
@@ -764,7 +771,6 @@ class _CourseCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top: icon + 3-dot ──────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 4, 0),
               child: Row(
@@ -779,38 +785,38 @@ class _CourseCard extends StatelessWidget {
                     child: Icon(icon, color: Colors.white, size: 22),
                   ),
                   const Spacer(),
-                  SizedBox(
-                    width: 32, height: 32,
-                    child: PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.more_vert_rounded,
-                          color: Colors.white, size: 18),
-                      color: const Color(0xFF252538),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      onSelected: (v) {
-                        if (v == 'edit')   onEdit();
-                        if (v == 'delete') onDelete();
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: _menuRow(
-                              Icons.edit_rounded, 'Edit', Colors.blue),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: _menuRow(Icons.delete_outline_rounded,
-                              'Delete', Colors.redAccent),
-                        ),
-                      ],
+                  if (isAlumni)
+                    SizedBox(
+                      width: 32, height: 32,
+                      child: PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.more_vert_rounded,
+                            color: Colors.white, size: 18),
+                        color: const Color(0xFF252538),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        onSelected: (v) {
+                          if (v == 'edit') onEdit();
+                          if (v == 'delete') onDelete();
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: _menuRow(
+                                Icons.edit_rounded, 'Edit', Colors.blue),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: _menuRow(Icons.delete_outline_rounded,
+                                'Delete', Colors.redAccent),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
 
-            // ── Bottom: name + desc + open pill ───────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Column(
@@ -833,6 +839,24 @@ class _CourseCard extends StatelessWidget {
                             color: Colors.white.withOpacity(0.65),
                             fontSize: 10,
                             height: 1.4)),
+                  ],
+                  // Display semester prominently
+                  if (semester.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text('Semester $semester',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600)),
+                    ),
                   ],
                   const SizedBox(height: 8),
                   Align(
@@ -873,10 +897,6 @@ class _CourseCard extends StatelessWidget {
   ]);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Small icon button
-// ═══════════════════════════════════════════════════════════════════════════
-
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -897,10 +917,6 @@ class _IconBtn extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Course Form Bottom Sheet
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _CourseFormSheet extends StatelessWidget {
   final String title;
@@ -931,11 +947,11 @@ class _CourseFormSheet extends StatelessWidget {
     required this.onSubmit,
   });
 
-  static const Color _bg      = Color(0xFF1C1C2E);
+  static const Color _bg = Color(0xFF1C1C2E);
   static const Color _surface = Color(0xFF252538);
   static const Color _primary = Color(0xFFF0EFFF);
-  static const Color _second  = Color(0xFF8A8AAA);
-  static const Color _accent  = Color(0xFF7C5CBF);
+  static const Color _second = Color(0xFF8A8AAA);
+  static const Color _accent = Color(0xFF7C5CBF);
 
   @override
   Widget build(BuildContext context) {
@@ -953,7 +969,6 @@ class _CourseFormSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
               Center(
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
@@ -963,7 +978,6 @@ class _CourseFormSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2)),
                 ),
               ),
-              // Live colour strip
               Container(
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 18),
@@ -1001,10 +1015,10 @@ class _CourseFormSheet extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemCount: courseIcons.length,
                   itemBuilder: (_, i) {
-                    final meta  = courseIcons[i];
-                    final key   = meta['key']   as String;
+                    final meta = courseIcons[i];
+                    final key = meta['key'] as String;
                     final color = meta['color'] as Color;
-                    final sel   = selectedIconKey == key;
+                    final sel = selectedIconKey == key;
                     return GestureDetector(
                       onTap: () => onIconSelected(key, color),
                       child: Container(
@@ -1065,7 +1079,7 @@ class _CourseFormSheet extends StatelessWidget {
 
   Widget _buildSemesterFormField() {
     return DropdownButtonFormField<String>(
-      value: semesterValue,
+      initialValue: semesterValue,
       items: List.generate(8, (i) => (i + 1).toString())
           .map((sem) => DropdownMenuItem(
                 value: sem,

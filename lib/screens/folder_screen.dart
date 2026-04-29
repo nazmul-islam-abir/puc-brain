@@ -15,6 +15,7 @@ class FolderScreen extends StatefulWidget {
   final Color courseColor;
   final int? parentFolderId;
   final String? currentFolderName;
+  final UserRole userRole;
 
   const FolderScreen({
     super.key,
@@ -23,6 +24,7 @@ class FolderScreen extends StatefulWidget {
     required this.courseColor,
     this.parentFolderId,
     this.currentFolderName,
+    required this.userRole,
   });
 
   @override
@@ -556,6 +558,7 @@ class _FolderScreenState extends State<FolderScreen> {
   Widget build(BuildContext context) {
     final uploadService = Provider.of<UploadService>(context);
     final isInsideFolder = widget.parentFolderId != null;
+    final isAlumni = widget.userRole == UserRole.alumni;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
@@ -571,7 +574,7 @@ class _FolderScreenState extends State<FolderScreen> {
               if (_isLoading)
                 const SliverFillRemaining(child: Center(child: _Spinner()))
               else if (_folders.isEmpty && _files.isEmpty)
-                SliverFillRemaining(child: _buildEmpty(isInsideFolder))
+                SliverFillRemaining(child: _buildEmpty(isInsideFolder, isAlumni))
               else
                 SliverToBoxAdapter(
                   child: Padding(
@@ -582,13 +585,13 @@ class _FolderScreenState extends State<FolderScreen> {
                         if (_folders.isNotEmpty) ...[
                           _sectionHeader('Folders', _folders.length),
                           const SizedBox(height: 10),
-                          _buildFolderGrid(),
+                          _buildFolderGrid(isAlumni),
                           const SizedBox(height: 24),
                         ],
                         if (_files.isNotEmpty) ...[
                           _sectionHeader('Files', _files.length),
                           const SizedBox(height: 10),
-                          _buildFileList(),
+                          _buildFileList(isAlumni),
                         ],
                       ],
                     ),
@@ -599,34 +602,37 @@ class _FolderScreenState extends State<FolderScreen> {
         ),
 
         // ── FABs ─────────────────────────────────────────────────────────
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (isInsideFolder) ...[
-              _Fab(
-                icon: Icons.upload_file_rounded,
-                label: 'Upload',
-                color: _accent,
-                small: true,
-                onTap: _uploadFiles,
-              ),
-              const SizedBox(height: 10),
-            ],
-            _Fab(
-              icon: Icons.create_new_folder_rounded,
-              label: 'New Folder',
-              color: _accent,
-              onTap: _showCreateFolderSheet,
-            ),
-          ],
-        ),
+        floatingActionButton: isAlumni
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (isInsideFolder) ...[
+                    _Fab(
+                      icon: Icons.upload_file_rounded,
+                      label: 'Upload',
+                      color: _accent,
+                      small: true,
+                      onTap: _uploadFiles,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  _Fab(
+                    icon: Icons.create_new_folder_rounded,
+                    label: 'New Folder',
+                    color: _accent,
+                    onTap: _showCreateFolderSheet,
+                  ),
+                ],
+              )
+            : null,
       ),
     );
   }
 
   // ─── Hero header ──────────────────────────────────────────────────────────
   Widget _buildHeader(UploadService uploadService, bool isInsideFolder) {
+    final isAlumni = widget.userRole == UserRole.alumni;
     return Container(
       decoration: BoxDecoration(
         color: _surface,
@@ -662,33 +668,37 @@ class _FolderScreenState extends State<FolderScreen> {
                 ),
               ),
               // Upload badge button
-              GestureDetector(
-                onTap: () => Navigator.of(context).pushNamed('/uploads'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: uploadService.pendingCount > 0
-                        ? Colors.orange.withOpacity(0.15)
-                        : _card,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
+              if (isAlumni)
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed('/uploads'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
                       color: uploadService.pendingCount > 0
-                          ? Colors.orange.withOpacity(0.4)
-                          : _border,
+                          ? Colors.orange.withOpacity(0.15)
+                          : _card,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: uploadService.pendingCount > 0
+                            ? Colors.orange.withOpacity(0.4)
+                            : _border,
+                      ),
                     ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.cloud_upload_rounded,
+                          color: uploadService.pendingCount > 0 ? Colors.orange : _textSec,
+                          size: 16),
+                      if (uploadService.pendingCount > 0) ...[
+                        const SizedBox(width: 5),
+                        Text('${uploadService.pendingCount}',
+                            style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ]),
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.cloud_upload_rounded,
-                        color: uploadService.pendingCount > 0 ? Colors.orange : _textSec,
-                        size: 16),
-                    if (uploadService.pendingCount > 0) ...[
-                      const SizedBox(width: 5),
-                      Text('${uploadService.pendingCount}',
-                          style: const TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w700)),
-                    ],
-                  ]),
                 ),
-              ),
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: _loadData,
@@ -771,7 +781,7 @@ class _FolderScreenState extends State<FolderScreen> {
   }
 
   // ─── Folder grid ──────────────────────────────────────────────────────────
-  Widget _buildFolderGrid() {
+  Widget _buildFolderGrid(bool isAlumni) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -787,15 +797,18 @@ class _FolderScreenState extends State<FolderScreen> {
         return _FolderCard(
           folder: folder,
           accent: _accent,
+          isAlumni: isAlumni,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => FolderScreen(
-              courseId: widget.courseId,
-              courseName: widget.courseName,
-              courseColor: widget.courseColor,
-              parentFolderId: folder['id'],
-              currentFolderName: folder['name'],
-            )),
+            MaterialPageRoute(
+                builder: (_) => FolderScreen(
+                      courseId: widget.courseId,
+                      courseName: widget.courseName,
+                      courseColor: widget.courseColor,
+                      parentFolderId: folder['id'],
+                      currentFolderName: folder['name'],
+                      userRole: widget.userRole,
+                    )),
           ).then((_) => _loadData()),
           onEdit: () => _showEditFolderSheet(folder),
           onDelete: () => _deleteFolder(folder['id']),
@@ -805,13 +818,14 @@ class _FolderScreenState extends State<FolderScreen> {
   }
 
   // ─── File list ────────────────────────────────────────────────────────────
-  Widget _buildFileList() {
+  Widget _buildFileList(bool isAlumni) {
     return Column(
       children: _files.map((file) => _FileRow(
         file: file,
         icon: _fileIcon(file['type'] ?? ''),
         iconColor: _fileColor(file['type'] ?? ''),
         accent: _accent,
+        isAlumni: isAlumni,
         onTap: () => _openFile(file['url']),
         onDownload: () => _downloadFile(file['url'], file['name']), // Add onDownload callback
         onDelete: () => _deleteFile(file['id']),
@@ -821,7 +835,7 @@ class _FolderScreenState extends State<FolderScreen> {
   }
 
   // ─── Empty state ──────────────────────────────────────────────────────────
-  Widget _buildEmpty(bool isInsideFolder) {
+  Widget _buildEmpty(bool isInsideFolder, bool isAlumni) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -836,30 +850,34 @@ class _FolderScreenState extends State<FolderScreen> {
               style: TextStyle(color: _textPri, fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Text(
-            isInsideFolder
-                ? 'Create a subfolder or upload files'
-                : 'Create a folder to get started',
+            isAlumni
+                ? (isInsideFolder
+                    ? 'Create a subfolder or upload files'
+                    : 'Create a folder to get started')
+                : 'No files or folders have been added yet',
             style: const TextStyle(color: _textSec, fontSize: 13),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 28),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _OutlineBtn(
-              icon: Icons.create_new_folder_rounded,
-              label: 'New Folder',
-              color: _accent,
-              onTap: _showCreateFolderSheet,
-            ),
-            if (isInsideFolder) ...[
-              const SizedBox(width: 12),
+          if (isAlumni)
+            const SizedBox(height: 28),
+          if (isAlumni)
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _OutlineBtn(
-                icon: Icons.upload_file_rounded,
-                label: 'Upload',
+                icon: Icons.create_new_folder_rounded,
+                label: 'New Folder',
                 color: _accent,
-                onTap: _uploadFiles,
+                onTap: _showCreateFolderSheet,
               ),
-            ],
-          ]),
+              if (isInsideFolder) ...[
+                const SizedBox(width: 12),
+                _OutlineBtn(
+                  icon: Icons.upload_file_rounded,
+                  label: 'Upload',
+                  color: _accent,
+                  onTap: _uploadFiles,
+                ),
+              ],
+            ]),
         ]),
       ),
     );
@@ -873,6 +891,7 @@ class _FolderScreenState extends State<FolderScreen> {
 class _FolderCard extends StatelessWidget {
   final Map<String, dynamic> folder;
   final Color accent;
+  final bool isAlumni;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -880,6 +899,7 @@ class _FolderCard extends StatelessWidget {
   const _FolderCard({
     required this.folder,
     required this.accent,
+    required this.isAlumni,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -923,25 +943,26 @@ class _FolderCard extends StatelessWidget {
                     child: Icon(Icons.folder_rounded, color: accent, size: 20),
                   ),
                   const Spacer(),
-                  SizedBox(
-                    width: 30, height: 30,
-                    child: PopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      icon: Icon(Icons.more_vert_rounded, color: _textSec, size: 17),
-                      color: const Color(0xFF252538),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      onSelected: (v) {
-                        if (v == 'edit')   onEdit();
-                        if (v == 'delete') onDelete();
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(value: 'edit',
-                            child: _mrow(Icons.edit_rounded, 'Edit', Colors.blue)),
-                        PopupMenuItem(value: 'delete',
-                            child: _mrow(Icons.delete_outline_rounded, 'Delete', Colors.redAccent)),
-                      ],
+                  if (isAlumni)
+                    SizedBox(
+                      width: 30, height: 30,
+                      child: PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.more_vert_rounded, color: _textSec, size: 17),
+                        color: const Color(0xFF252538),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onSelected: (v) {
+                          if (v == 'edit')   onEdit();
+                          if (v == 'delete') onDelete();
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(value: 'edit',
+                              child: _mrow(Icons.edit_rounded, 'Edit', Colors.blue)),
+                          PopupMenuItem(value: 'delete',
+                              child: _mrow(Icons.delete_outline_rounded, 'Delete', Colors.redAccent)),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -989,6 +1010,7 @@ class _FileRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final Color accent;
+  final bool isAlumni;
   final VoidCallback onDelete;
   final VoidCallback onRename;
   final VoidCallback onDownload; // Add onDownload callback
@@ -999,6 +1021,7 @@ class _FileRow extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.accent,
+    required this.isAlumni,
     required this.onDelete,
     required this.onRename,
     required this.onDownload, // Add onDownload callback
@@ -1069,27 +1092,33 @@ class _FileRow extends StatelessWidget {
           ),
   
           // Actions
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: _textSec, size: 18),
-            color: const Color(0xFF252538),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            onSelected: (v) {
-              if (v == 'open') onTap();
-              if (v == 'download') onDownload();
-              if (v == 'rename') onRename();
-              if (v == 'delete') onDelete();
-            },
-            itemBuilder: (_) => [
-               PopupMenuItem(value: 'open',
-                  child: _mrow(Icons.open_in_new_rounded, 'Open', Colors.lightBlue)),
-              PopupMenuItem(value: 'download',
-                  child: _mrow(Icons.download_rounded, 'Download', Colors.greenAccent)),
-              PopupMenuItem(value: 'rename',
-                  child: _mrow(Icons.edit_rounded, 'Rename', Colors.blue)),
-              PopupMenuItem(value: 'delete',
-                  child: _mrow(Icons.delete_outline_rounded, 'Delete', Colors.redAccent)),
-            ],
-          ),
+          if (isAlumni)
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert_rounded, color: _textSec, size: 18),
+              color: const Color(0xFF252538),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onSelected: (v) {
+                if (v == 'open') onTap();
+                if (v == 'download') onDownload();
+                if (v == 'rename') onRename();
+                if (v == 'delete') onDelete();
+              },
+              itemBuilder: (_) => [
+                 PopupMenuItem(value: 'open',
+                    child: _mrow(Icons.open_in_new_rounded, 'Open', Colors.lightBlue)),
+                PopupMenuItem(value: 'download',
+                    child: _mrow(Icons.download_rounded, 'Download', Colors.greenAccent)),
+                PopupMenuItem(value: 'rename',
+                    child: _mrow(Icons.edit_rounded, 'Rename', Colors.blue)),
+                PopupMenuItem(value: 'delete',
+                    child: _mrow(Icons.delete_outline_rounded, 'Delete', Colors.redAccent)),
+              ],
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.download_rounded, color: Colors.greenAccent),
+              onPressed: onDownload,
+            ),
         ]),
       ),
     );

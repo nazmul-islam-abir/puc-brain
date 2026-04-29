@@ -3,7 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'services/upload_service.dart';
-import 'screens/courses_screen.dart';
+import 'services/supabase_service.dart';
+import 'screens/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,22 +28,46 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => UploadService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => UploadService()),
+        Provider(create: (context) => SupabaseService()),
+      ],
       child: MaterialApp(
-        title: 'StudyHub',
+        title: 'EduVault',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
           fontFamily: 'Poppins',
           brightness: Brightness.dark,
+          primarySwatch: Colors.purple,
           colorScheme: const ColorScheme.dark(
-            primary: Colors.purple,
-            secondary: Colors.blue,
-            surface: Color(0xFF1A1F2E),
+            primary: Color(0xFF7C5CBF),
+            secondary: Color(0xFF4F8EF7),
+            surface: Color(0xFF1C1C2E),
+            error: Color(0xFFCF6679),
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: false,
+            titleTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C5CBF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
           ),
         ),
-        home: const CoursesScreen(),
+        home: const LoginScreen(),
       ),
     );
   }

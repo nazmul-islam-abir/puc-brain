@@ -101,22 +101,18 @@ class _FilesScreenState extends State<FilesScreen> {
             String fileSize = _formatBytes(file.size);
             
             // Upload to GitHub - passing folderId (semesterId) as third parameter
-            String? rawUrl = await uploadService.uploadFile(uploadFile, fileName, widget.semesterId);
+            String? rawUrl = await uploadService.uploadFile(uploadFile, fileName, widget.semesterId,);
             
-            if (rawUrl != null) {
-              // Save to Supabase with semester_id
-              await _supabaseService.addFile(
-                widget.semesterId,
-                fileName,
-                rawUrl,
-                fileType,
-                fileSize,
-              );
-              success++;
-            } else {
-              failed++;
-            }
-          } catch (e) {
+            // Save to Supabase with semester_id
+            await _supabaseService.addFile(
+              widget.semesterId,
+              fileName,
+              rawUrl!,
+              fileType,
+              fileSize,
+            );
+            success++;
+                    } catch (e) {
             print('Upload error: $e');
             failed++;
           }

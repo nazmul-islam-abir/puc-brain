@@ -2,28 +2,32 @@
 
 ## Overview
 
-This project is a Flutter application that allows users to upload and download files from a GitHub repository. It uses the `flutter_dotenv` package to manage GitHub credentials and the `http` package to interact with the GitHub API. It also uses the `url_launcher` package to open files.
+This document outlines the architecture, features, and design of the EduVault Flutter application. EduVault is a mobile app designed to help students and alumni manage their course materials, connect with peers, and stay engaged with the academic community.
 
-## Style, Design, and Features
+## Features
 
-*   **UI:** The application uses a dark theme with a purple and blue color scheme.
-*   **File Upload:** The core feature is the ability to upload files, which are managed by the `UploadService`.
-*   **File Download:** Users can now download files to their device. A `DownloadService` handles the download logic, including requesting storage permissions.
-*   **File Opening:** Users can tap on a file to open it in an external application. This works for files in the root directory and in sub-folders.
-*   **State Management:** The project uses the `provider` package for state management, specifically for the `UploadService`.
-*   **Android Configuration:** The `AndroidManifest.xml` file has been updated to allow opening `http` and `https` URLs on Android 11 and above.
-*   **Hamburger Menu:** The `courses_screen.dart` now features a hamburger menu (drawer) that slides in from the left. It can be opened by tapping a menu icon and closed by tapping outside of it.
-*   **Mandatory Semester & Validation:** The "semester" field is a mandatory field when creating or editing a course. The input is validated to ensure it is a number between 1 and 8.
-*   **Top Notifications:** All notifications, including success messages and validation warnings, now appear at the top of the screen as a `MaterialBanner`.
-*   **Semester Filtering:** The main screen now has a dropdown to filter courses by semester.
-*   **Semester Dropdown in Forms:** The "New Course" and "Edit Course" forms now use a dropdown for semester selection.
-*   **Bug Fix:** Fixed a bug where the app would crash when opening the "New Course" or "Edit Course" dialog due to an incorrect variable name.
+- **User Roles:** The app supports two user roles: `guest` and `alumni`. Alumni have full access to all features, including creating and managing courses, while guests have read-only access.
+- **Course Management (Alumni):** Alumni can create, edit, and delete courses. Each course can have a name, description, semester, color, and icon.
+- **Course Browsing (Guest & Alumni):** All users can browse and search for courses. They can filter courses by category and semester.
+- **Folder and File Management:** Within each course, alumni can create, edit, and delete folders and upload files. Guests can view folders and files.
+- **Feeds:** A social feed where alumni can post updates, ask questions, and interact with other alumni.
+- **Buddy System:** Users can add each other as buddies to connect and chat.
+- **Real-time Chat:** A one-on-one chat feature for buddies to communicate in real-time.
+- **Profile Management:** Users can set their username.
 
-## Current Plan
+## Design
 
-The user requested to filter courses by semester and use a dropdown for semester selection in the forms. I have implemented this by:
+- **Theme:** The app uses a dark theme with a consistent color scheme and typography.
+- **Layout:** The app is designed to be mobile-responsive and uses a modern, intuitive layout.
+- **Components:** The app uses a variety of modern UI components, including custom-designed cards, buttons, and a bottom navigation bar.
 
-1.  **Adding a Semester Filter Dropdown:** I added a dropdown to the main screen to filter courses by semester.
-2.  **Updating the `_CourseFormSheet`:** I replaced the semester text field with a dropdown in the `_CourseFormSheet`.
-3.  **Updating `_filteredCourses`:** I updated the `_filteredCourses` logic to filter courses based on the selected semester.
-4.  **Fixing a Bug:** I corrected an error where an out-of-scope variable was used in the `_CourseFormSheet`, which caused a crash.
+## Current Task
+
+**Implement a buddy and chat system.**
+
+- Create a new `buddies` table in Supabase to store buddy relationships.
+- Create a new `messages` table in Supabase to store chat messages.
+- Implement a new `ProfileScreen` where users can set their username and add buddies.
+- Implement a new `AddBuddyScreen` where users can add buddies by their user ID.
+- Implement a new `BuddiesScreen` that displays a list of the user's buddies.
+- Implement a new `ChatScreen` where users can chat with their buddies in real-time.
